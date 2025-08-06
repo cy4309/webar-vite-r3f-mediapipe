@@ -20,22 +20,33 @@ class FaceLandmarkManager {
 
   initializeModel = async () => {
     this.faceLandmarker = null;
-    const filesetResolver = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+
+    const vision = await FilesetResolver.forVisionTasks(
+      // "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm"
     );
-    this.faceLandmarker = await FaceLandmarker.createFromOptions(
-      filesetResolver,
-      {
-        baseOptions: {
-          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-          delegate: "GPU",
-        },
-        outputFaceBlendshapes: true,
-        outputFacialTransformationMatrixes: true,
-        runningMode: "VIDEO",
-        numFaces: 1,
-      }
-    );
+
+    // this.handLandmarker = await HandLandmarker.createFromOptions(vision, {
+    //   baseOptions: {
+    //     modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+    //     delegate: "GPU",
+    //   },
+    //   outputFaceBlendshapes: true,
+    //   outputFacialTransformationMatrixes: true,
+    //   runningMode: "VIDEO",
+    //   numHands: 2,
+    // });
+
+    this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+        delegate: "GPU",
+      },
+      outputFaceBlendshapes: true,
+      outputFacialTransformationMatrixes: true,
+      runningMode: "VIDEO",
+      numFaces: 1,
+    });
   };
 
   getResults = () => {

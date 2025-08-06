@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { loadGltf } from "@/utils/loaders";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
-import { decomposeMatrix } from "../utils/decomposeMatrix";
+import { decomposeMatrix } from "@/utils/decomposeMatrix";
 
 class AvatarManager {
   private static instance: AvatarManager = new AvatarManager();
@@ -28,7 +28,12 @@ class AvatarManager {
       this.scene.children[0].removeFromParent();
     }
     const gltf = await loadGltf(url);
-    gltf.scene.traverse((obj) => (obj.frustumCulled = false));
+    // gltf.scene.traverse((obj) => (obj.frustumCulled = false));
+    gltf.scene.traverse((obj) => {
+      if (obj.name === "hat_luffy_0") {
+        this.hatObject = obj;
+      }
+    });
     this.scene.add(gltf.scene);
 
     // make hands invisible
@@ -88,6 +93,17 @@ class AvatarManager {
       quaternion.y *= -1;
       quaternion.z *= -1;
       translation.x *= -1;
+    }
+
+    const hat = this.hatObject;
+    if (hat) {
+      hat.quaternion.copy(quaternion);
+      hat.scale.set(0.15, 0.15, 0.15);
+      hat.position.set(
+        translation.x * 0.01,
+        translation.y * 0.01 + 0.67, // 頭頂偏移
+        (translation.z + 50) * 0.02
+      );
     }
 
     const Head = this.scene.getObjectByName("Head");

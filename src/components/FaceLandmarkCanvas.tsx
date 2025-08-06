@@ -5,7 +5,7 @@
 // "use client";
 import { useEffect, useRef, useState } from "react";
 import DrawLandmarkCanvas from "@/components/DrawLandmarkCanvas";
-// import AvatarCanvas from "@/components/AvatarCanvas";
+import AvatarCanvas from "@/components/AvatarCanvas";
 import FaceLandmarkManager from "@/classes/FaceLandmarkManager";
 import ReadyPlayerCreator from "@/components/ReadyPlayerCreator";
 import BaseButton from "@/components/BaseButton";
@@ -17,9 +17,10 @@ const FaceLandmarkCanvas = () => {
 
   const [avatarView, setAvatarView] = useState(true);
   const [showAvatarCreator, setShowAvatarCreator] = useState(false);
-  const [modelUrl, setModelUrl] = useState(
-    "https://models.readyplayer.me/6460691aa35b2e5b7106734d.glb?morphTargets=ARKit"
-  );
+  // const [modelUrl, setModelUrl] = useState(
+  //   "https://models.readyplayer.me/6460691aa35b2e5b7106734d.glb?morphTargets=ARKit"
+  // );
+  const [modelUrl, setModelUrl] = useState("/hat.glb");
   console.log(modelUrl);
   const [videoSize, setVideoSize] = useState<{
     width: number;
@@ -114,7 +115,7 @@ const FaceLandmarkCanvas = () => {
         </BaseButton>
       </div>
 
-      <div className="m-8 relative flex justify-center">
+      <div className="relative flex justify-center">
         <video
           className="w-full h-auto"
           ref={videoRef}
@@ -139,7 +140,7 @@ const FaceLandmarkCanvas = () => {
                 handleComplete={handleAvatarCreationComplete}
               />
             )}
-            {/* {avatarView ? (
+            {avatarView ? (
               <AvatarCanvas
                 width={videoSize.width}
                 height={videoSize.height}
@@ -150,11 +151,11 @@ const FaceLandmarkCanvas = () => {
                 width={videoSize.width}
                 height={videoSize.height}
               />
-            )} */}
-            <DrawLandmarkCanvas
+            )}
+            {/* <DrawLandmarkCanvas
               width={videoSize.width}
               height={videoSize.height}
-            />
+            /> */}
           </>
         )}
       </div>
