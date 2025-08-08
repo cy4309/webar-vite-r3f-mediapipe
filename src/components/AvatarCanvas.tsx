@@ -1,15 +1,35 @@
+/** @description 主要用於渲染 R3F 的 Canvas，顯示 3D 模型（帽子）與 FaceDepth 遮罩等。是視覺渲染的主場景。 */
+
 import { Canvas } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import AvatarManager from "@/classes/AvatarManager";
 import { OrbitControls } from "@react-three/drei";
 import FaceLandmarkManager from "@/classes/FaceLandmarkManager";
 import { Float, Text3D } from "@react-three/drei";
+import FaceMeshMask from "@/components/FaceMeshMask";
+import * as THREE from "three";
 
 interface AvatarCanvasProps {
   width: number;
   height: number;
   url: string;
+  // mirrored: boolean;
+  // videoRef: React.RefObject<HTMLVideoElement>;
 }
+
+// const VideoPlane = ({ video }: { video: HTMLVideoElement }) => {
+//   const texture = new THREE.VideoTexture(video);
+//   texture.minFilter = THREE.LinearFilter;
+//   texture.magFilter = THREE.LinearFilter;
+//   texture.format = THREE.RGBAFormat;
+
+//   return (
+//     <mesh position={[0, 0, -0.1]} renderOrder={-1}>
+//       <planeGeometry args={[2, 2]} />
+//       <meshBasicMaterial map={texture} toneMapped={false} />
+//     </mesh>
+//   );
+// };
 
 const AvatarCanvas = ({ width, height, url }: AvatarCanvasProps) => {
   const [scene, setScene] = useState<THREE.Scene | null>();
@@ -54,6 +74,8 @@ const AvatarCanvas = ({ width, height, url }: AvatarCanvasProps) => {
           enableZoom={false}
           enablePan={false}
         />
+        {/* {videoRef.current && <VideoPlane video={videoRef.current} mirrored={mirrored} />} */}
+        <FaceMeshMask />
         {scene && <primitive object={scene} />}
         {isLoading && (
           <Float floatIntensity={1} speed={1}>

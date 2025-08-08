@@ -1,3 +1,5 @@
+/** @description 把 MediaPipe 給的 flat matrix 轉成位移（translation）、旋轉（rotation）、縮放（scale），供 Avatar 用。 */
+
 import * as THREE from "three";
 
 const decomposeMatrix = (

@@ -1,4 +1,5 @@
 //@ts-nocheck
+/** @description 控制 3D avatar（如帽子模型）的載入與變形，包括跟踪臉部資訊（translation/rotation）並套用到模型上  */
 
 import * as THREE from "three";
 import { loadGltf } from "@/utils/loaders";
@@ -46,7 +47,6 @@ class AvatarManager {
 
   updateFacialTransforms = (results: FaceLandmarkerResult, flipped = true) => {
     if (!results || !this.isModelLoaded) return;
-
     this.updateBlendShapes(results, flipped);
     this.updateTranslation(results, flipped);
   };
@@ -104,6 +104,18 @@ class AvatarManager {
         translation.y * 0.01 + 0.67, // 頭頂偏移
         (translation.z + 50) * 0.02
       );
+
+      hat.renderOrder = 2;
+      hat.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.material.depthTest = true;
+          child.material.colorWrite = true;
+          child.material.transparent = false;
+          child.renderOrder = 2;
+          // child.material.depthWrite = false;
+          // child.material.color = "red";
+        }
+      });
     }
 
     const Head = this.scene.getObjectByName("Head");

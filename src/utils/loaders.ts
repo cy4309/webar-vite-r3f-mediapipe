@@ -1,4 +1,5 @@
 //@ts-nocheck
+/** @description 用來載入 GLB 或其他 3D 資源的 util，給 AvatarManager 用的。 */
 
 import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
 

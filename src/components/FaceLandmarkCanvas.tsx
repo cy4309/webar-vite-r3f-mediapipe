@@ -1,6 +1,5 @@
-/**
- * @description 確認好R3F Canvas 在相機 metadata 尚未完整時提早 render，會導致整體掛掉。
- */
+/** @description 確認好R3F Canvas 在相機 metadata 尚未完整時提早 render，會導致整體掛掉。 */
+/** @description 包含整體邏輯的容器元件：開啟攝影機、取得媒體串流、切換 view、初始化 AvatarManager、呼叫動畫 loop 等。 */
 
 // "use client";
 import { useEffect, useRef, useState } from "react";
@@ -14,20 +13,71 @@ const FaceLandmarkCanvas = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastVideoTimeRef = useRef(-1);
   const requestRef = useRef(0);
-
   const [avatarView, setAvatarView] = useState(true);
   const [showAvatarCreator, setShowAvatarCreator] = useState(false);
   // const [modelUrl, setModelUrl] = useState(
   //   "https://models.readyplayer.me/6460691aa35b2e5b7106734d.glb?morphTargets=ARKit"
   // );
   const [modelUrl, setModelUrl] = useState("/hat.glb");
-  console.log(modelUrl);
   const [videoSize, setVideoSize] = useState<{
     width: number;
     height: number;
   }>();
   const [isRenderReady, setIsRenderReady] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const [facing, setFacing] = useState<"user" | "environment">("user");
+  const [mirrored, setMirrored] = useState(true);
+  console.log(mirrored);
+
+  // 取得串流（含切換）
+  const streamRef = useRef<MediaStream | null>(null);
+  const setupCamera = async (mode: "user" | "environment") => {
+    // 停掉舊串流
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    const constraints: MediaStreamConstraints = {
+      video: {
+        facingMode: { ideal: mode },
+        // width: { ideal: 1280 },
+        // height: { ideal: 720 },
+      },
+      audio: false,
+    };
+    let stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    // fallback: 有些桌機不理 facingMode，就 enumerateDevices
+    const track = stream.getVideoTracks()[0];
+    if (track.getSettings().facingMode !== mode) {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videos = devices.filter((d) => d.kind === "videoinput");
+      const pick =
+        videos.find((d) =>
+          mode === "environment"
+            ? /back|rear|environment/i.test(d.label)
+            : /front|user|face/i.test(d.label)
+        ) || videos[0];
+      if (pick) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: pick.deviceId } },
+          audio: false,
+        });
+      }
+    }
+
+    streamRef.current = stream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+    }
+    setMirrored(mode === "user");
+    setIsCameraReady(true);
+  };
+
+  // 初次與切換時呼叫
+  useEffect(() => {
+    setupCamera(facing);
+    return () => streamRef.current?.getTracks().forEach((t) => t.stop());
+  }, [facing]);
 
   useEffect(() => {
     const getUserCamera = async () => {
@@ -113,6 +163,13 @@ const FaceLandmarkCanvas = () => {
         <BaseButton onClick={toggleAvatarCreatorView}>
           {"Customize your Avatar!"}
         </BaseButton>
+        <BaseButton
+          onClick={() =>
+            setFacing((prev) => (prev === "user" ? "environment" : "user"))
+          }
+        >
+          切換相機（目前：{facing === "user" ? "前鏡頭" : "後鏡頭"}）
+        </BaseButton>
       </div>
 
       <div className="relative flex justify-center">
@@ -145,6 +202,8 @@ const FaceLandmarkCanvas = () => {
                 width={videoSize.width}
                 height={videoSize.height}
                 url={modelUrl}
+                // videoRef={videoRef}
+                // mirrored={mirrored}
               />
             ) : (
               <DrawLandmarkCanvas

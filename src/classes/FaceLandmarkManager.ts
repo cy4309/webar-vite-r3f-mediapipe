@@ -1,3 +1,5 @@
+/** @description Mediapipe 的封裝，初始化並持續處理臉部追蹤（Landmarker）的結果，供其他模組使用。 */
+
 import {
   FaceLandmarker,
   FilesetResolver,
