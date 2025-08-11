@@ -1,6 +1,6 @@
 /** @description 主要用於渲染 R3F 的 Canvas，顯示 3D 模型（帽子）與 FaceDepth 遮罩等。是視覺渲染的主場景。 */
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import AvatarManager from "@/classes/AvatarManager";
 import { OrbitControls } from "@react-three/drei";
@@ -9,10 +9,22 @@ import { Float, Text3D } from "@react-three/drei";
 import FaceMeshMask from "@/components/FaceMeshMask";
 import * as THREE from "three";
 
+function CanvasProbe({
+  onReady,
+}: {
+  onReady?: (el: HTMLCanvasElement) => void;
+}) {
+  const { gl } = useThree();
+  useEffect(() => {
+    onReady?.(gl.domElement as HTMLCanvasElement);
+  }, [gl, onReady]);
+  return null;
+}
 interface AvatarCanvasProps {
   width: number;
   height: number;
   url: string;
+  onCanvasReady?: (el: HTMLCanvasElement) => void;
   // mirrored: boolean;
   // videoRef: React.RefObject<HTMLVideoElement>;
 }
@@ -31,7 +43,12 @@ interface AvatarCanvasProps {
 //   );
 // };
 
-const AvatarCanvas = ({ width, height, url }: AvatarCanvasProps) => {
+const AvatarCanvas = ({
+  width,
+  height,
+  url,
+  onCanvasReady,
+}: AvatarCanvasProps) => {
   const [scene, setScene] = useState<THREE.Scene | null>();
   const [isLoading, setIsLoading] = useState(true);
   const avatarManagerRef = useRef<AvatarManager>(AvatarManager.getInstance());
@@ -64,7 +81,11 @@ const AvatarCanvas = ({ width, height, url }: AvatarCanvasProps) => {
 
   return (
     <div className="absolute" style={{ width: width, height: height }}>
-      <Canvas camera={{ fov: 30, position: [0, 0.5, 1] }}>
+      <Canvas
+        camera={{ fov: 30, position: [0, 0.5, 1] }}
+        gl={{ preserveDrawingBuffer: true }}
+      >
+        <CanvasProbe onReady={onCanvasReady} />
         <ambientLight />
         <directionalLight />
         <OrbitControls

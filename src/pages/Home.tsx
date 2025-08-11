@@ -3,7 +3,7 @@ import FaceLandmarkCanvas from "@/components/FaceLandmarkCanvas";
 
 export default function Home() {
   return (
-    <div className="w-full min-h-[100dvh] flex flex-col justify-center items-center">
+    <div className="w-full h-full flex flex-col justify-center items-center">
       {/* <Helmet>
         <title>Mediapie FaceLandmarker Demo</title>
         <meta
@@ -22,7 +22,7 @@ export default function Home() {
         Detect the most prominent face from an input image, then estimate 478 3D
         facial landmarks and 52 facial blendshape scores in real-time.
       </p> */}
-      <div className="w-full flex justify-center">
+      <div className="w-full h-[100dvh] flex justify-center">
         <FaceLandmarkCanvas />
       </div>
     </div>
