@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/stores/store";
 import { toggleTheme } from "@/stores/features/themeSlice";
-import { Sun, Moon } from "lucide-react";
+// import { Sun, Moon } from "lucide-react";
+import { LuSun, LuMoon } from "react-icons/lu";
 
 export default function ThemeButton() {
   const theme = useSelector((state: RootState) => state.theme.mode);
@@ -28,7 +29,7 @@ export default function ThemeButton() {
           ${theme === "light" ? "translate-x-0" : "translate-x-6"}
         `}
       >
-        {theme === "light" ? <Sun size={16} /> : <Moon size={16} />}
+        {theme === "light" ? <LuSun size={16} /> : <LuMoon size={16} />}
       </span>
     </button>
   );
