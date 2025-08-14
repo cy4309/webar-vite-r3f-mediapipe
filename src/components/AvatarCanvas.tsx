@@ -3,11 +3,18 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import AvatarManager from "@/classes/AvatarManager";
-import { OrbitControls } from "@react-three/drei";
 import FaceLandmarkManager from "@/classes/FaceLandmarkManager";
-import { Float, Text3D } from "@react-three/drei";
+import { Float, Text3D, OrbitControls } from "@react-three/drei";
 import FaceMeshMask from "@/components/FaceMeshMask";
 import * as THREE from "three";
+interface AvatarCanvasProps {
+  width: number;
+  height: number;
+  url: string;
+  onCanvasReady?: (el: HTMLCanvasElement) => void;
+  // mirrored: boolean;
+  // videoRef: React.RefObject<HTMLVideoElement>;
+}
 
 function CanvasProbe({
   onReady,
@@ -19,14 +26,6 @@ function CanvasProbe({
     onReady?.(gl.domElement as HTMLCanvasElement);
   }, [gl, onReady]);
   return null;
-}
-interface AvatarCanvasProps {
-  width: number;
-  height: number;
-  url: string;
-  onCanvasReady?: (el: HTMLCanvasElement) => void;
-  // mirrored: boolean;
-  // videoRef: React.RefObject<HTMLVideoElement>;
 }
 
 // const VideoPlane = ({ video }: { video: HTMLVideoElement }) => {
@@ -49,6 +48,8 @@ const AvatarCanvas = ({
   url,
   onCanvasReady,
 }: AvatarCanvasProps) => {
+  if (!width || !height || !url) return null;
+
   const [scene, setScene] = useState<THREE.Scene | null>();
   const [isLoading, setIsLoading] = useState(true);
   const avatarManagerRef = useRef<AvatarManager>(AvatarManager.getInstance());
@@ -69,7 +70,7 @@ const AvatarCanvas = ({
     setIsLoading(true);
     const avatarManager = AvatarManager.getInstance();
     avatarManager
-      .loadModel(url)
+      .loadModel(url, "/foods-roulette.png")
       .then(() => {
         setScene(avatarManager.getScene());
         setIsLoading(false);
@@ -84,6 +85,10 @@ const AvatarCanvas = ({
       <Canvas
         camera={{ fov: 30, position: [0, 0.5, 1] }}
         gl={{ preserveDrawingBuffer: true }}
+        onCreated={({ gl }) => {
+          gl.toneMapping = THREE.NoToneMapping;
+          gl.outputColorSpace = THREE.LinearSRGBColorSpace;
+        }}
       >
         <CanvasProbe onReady={onCanvasReady} />
         <ambientLight />

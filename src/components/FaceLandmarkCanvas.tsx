@@ -416,7 +416,7 @@ const FaceLandmarkCanvas = () => {
 
   const [avatarView, setAvatarView] = useState(true);
   const [showAvatarCreator, setShowAvatarCreator] = useState(false);
-  const [modelUrl, setModelUrl] = useState("/hat.glb");
+  const [modelUrl, setModelUrl] = useState("/tiger-hat2.glb");
 
   const [videoSize, setVideoSize] = useState<{
     width: number;
@@ -447,43 +447,92 @@ const FaceLandmarkCanvas = () => {
 
   // 取得串流（含切換）
   const streamRef = useRef<MediaStream | null>(null);
-  const setupCamera = async (mode: "user" | "environment") => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    const constraints: MediaStreamConstraints = {
-      video: {
-        facingMode: { ideal: mode },
-      },
-      audio: false,
-    };
-    let stream = await navigator.mediaDevices.getUserMedia(constraints);
+  // const setupCamera = async (mode: "user" | "environment") => {
+  //   streamRef.current?.getTracks().forEach((t) => t.stop());
+  //   const constraints: MediaStreamConstraints = {
+  //     video: {
+  //       facingMode: { ideal: mode },
+  //     },
+  //     audio: false,
+  //   };
+  //   let stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-    // 一些桌機/Android 不吃 facingMode，fallback enumerateDevices
-    const track = stream.getVideoTracks()[0];
-    if (track.getSettings().facingMode !== mode) {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videos = devices.filter((d) => d.kind === "videoinput");
-      const pick =
-        videos.find((d) =>
-          mode === "environment"
-            ? /back|rear|environment/i.test(d.label)
-            : /front|user|face/i.test(d.label)
-        ) || videos[0];
-      if (pick) {
-        stream.getTracks().forEach((t) => t.stop());
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: pick.deviceId } },
-          audio: false,
-        });
+  //   // 一些桌機/Android 不吃 facingMode，fallback enumerateDevices
+  //   const track = stream.getVideoTracks()[0];
+  //   if (track.getSettings().facingMode !== mode) {
+  //     const devices = await navigator.mediaDevices.enumerateDevices();
+  //     const videos = devices.filter((d) => d.kind === "videoinput");
+  //     const pick =
+  //       videos.find((d) =>
+  //         mode === "environment"
+  //           ? /back|rear|environment/i.test(d.label)
+  //           : /front|user|face/i.test(d.label)
+  //       ) || videos[0];
+  //     if (pick) {
+  //       stream.getTracks().forEach((t) => t.stop());
+  //       stream = await navigator.mediaDevices.getUserMedia({
+  //         video: { deviceId: { exact: pick.deviceId } },
+  //         audio: false,
+  //       });
+  //     }
+  //   }
+
+  //   streamRef.current = stream;
+  //   if (videoRef.current) {
+  //     videoRef.current.srcObject = stream;
+  //     await videoRef.current.play();
+  //   }
+  //   setMirrored(mode === "user");
+  //   setIsCameraReady(true);
+  // };
+  const setupCamera = async (mode: "user" | "environment", retry = 0) => {
+    try {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      const constraints: MediaStreamConstraints = {
+        video: { facingMode: { ideal: mode } },
+        audio: false,
+      };
+      let stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      const track = stream.getVideoTracks()[0];
+      if (track.getSettings().facingMode !== mode) {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videos = devices.filter((d) => d.kind === "videoinput");
+          const pick =
+            videos.find((d) =>
+              mode === "environment"
+                ? /back|rear|environment/i.test(d.label)
+                : /front|user|face/i.test(d.label)
+            ) || videos[0];
+          if (pick) {
+            stream.getTracks().forEach((t) => t.stop());
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { deviceId: { exact: pick.deviceId } },
+              audio: false,
+            });
+          }
+        } catch (e) {
+          console.log(e);
+          alert("Failed to enumerate devices or switch camera.");
+        }
+      }
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setMirrored(mode === "user");
+      setIsCameraReady(true);
+    } catch (e) {
+      console.log(e);
+      if (retry < 2) {
+        setTimeout(() => setupCamera(mode, retry + 1), 500); // 自動重試
+      } else {
+        alert("Failed to setup camera.");
       }
     }
-
-    streamRef.current = stream;
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
-    }
-    setMirrored(mode === "user");
-    setIsCameraReady(true);
   };
 
   // 初次與切換時呼叫
@@ -492,6 +541,32 @@ const FaceLandmarkCanvas = () => {
     return () => streamRef.current?.getTracks().forEach((t) => t.stop());
   }, [facing]);
 
+  // useEffect(() => {
+  //   const getUserCamera = async () => {
+  //     try {
+  //       const stream = await navigator.mediaDevices.getUserMedia({
+  //         video: true,
+  //       });
+  //       if (videoRef.current) {
+  //         videoRef.current.srcObject = stream;
+  //         videoRef.current.onloadedmetadata = () => {
+  //           updateVideoSize();
+  //           setIsCameraReady(true);
+  //           videoRef.current!.play();
+  //         };
+  //       }
+  //     } catch (e) {
+  //       console.log(e);
+  //       alert("Failed to load webcam!");
+  //     }
+  //   };
+  //   getUserCamera();
+  //   window.addEventListener("resize", updateVideoSize);
+  //   return () => {
+  //     cancelAnimationFrame(requestRef.current);
+  //     window.removeEventListener("resize", updateVideoSize);
+  //   };
+  // }, []);
   useEffect(() => {
     const getUserCamera = async () => {
       try {
@@ -584,68 +659,58 @@ const FaceLandmarkCanvas = () => {
   };
 
   // ========== 拍照（輸出合成 PNG） ==========
+  // const handleShootPhoto = async () => {
+  //   const v = videoRef.current;
+  //   if (!v) return;
+  //   // 以 video 原生解析度為基準輸出
+  //   const W = v.videoWidth || v.clientWidth;
+  //   const H = v.videoHeight || v.clientHeight;
+
+  //   const out = document.createElement("canvas");
+  //   out.width = W;
+  //   out.height = H;
+  //   const ctx = out.getContext("2d")!;
+
+  //   // 1) 畫相機影像（含鏡像）
+  //   ctx.save();
+  //   if (mirrored) {
+  //     ctx.scale(-1, 1);
+  //     ctx.drawImage(v, -W, 0, W, H);
+  //   } else {
+  //     ctx.drawImage(v, 0, 0, W, H);
+  //   }
+  //   ctx.restore();
+
+  //   // 2) 疊 R3F（若有）
+  //   const r3f = ensureR3FCanvas();
+  //   if (r3f) ctx.drawImage(r3f, 0, 0, W, H);
+
+  //   // 3) 疊 Landmarks（若有）
+  //   const overlay = ensureOverlayCanvas();
+  //   if (overlay) ctx.drawImage(overlay, 0, 0, W, H);
+
+  //   out.toBlob((blob) => {
+  //     if (!blob) return;
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = `photo_${Date.now()}.png`;
+  //     a.click();
+  //     URL.revokeObjectURL(url);
+  //   }, "image/png");
+  // };
   const handleShootPhoto = async () => {
-    const v = videoRef.current;
-    if (!v) return;
-    // 以 video 原生解析度為基準輸出
-    const W = v.videoWidth || v.clientWidth;
-    const H = v.videoHeight || v.clientHeight;
+    try {
+      const v = videoRef.current;
+      if (!v) return;
+      const W = v.videoWidth || v.clientWidth;
+      const H = v.videoHeight || v.clientHeight;
 
-    const out = document.createElement("canvas");
-    out.width = W;
-    out.height = H;
-    const ctx = out.getContext("2d")!;
+      const out = document.createElement("canvas");
+      out.width = W;
+      out.height = H;
+      const ctx = out.getContext("2d")!;
 
-    // 1) 畫相機影像（含鏡像）
-    ctx.save();
-    if (mirrored) {
-      ctx.scale(-1, 1);
-      ctx.drawImage(v, -W, 0, W, H);
-    } else {
-      ctx.drawImage(v, 0, 0, W, H);
-    }
-    ctx.restore();
-
-    // 2) 疊 R3F（若有）
-    const r3f = ensureR3FCanvas();
-    if (r3f) ctx.drawImage(r3f, 0, 0, W, H);
-
-    // 3) 疊 Landmarks（若有）
-    const overlay = ensureOverlayCanvas();
-    if (overlay) ctx.drawImage(overlay, 0, 0, W, H);
-
-    out.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `photo_${Date.now()}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, "image/png");
-  };
-
-  // ========== 錄影（輸出合成影片） ==========
-  const startCompositeRecording = async () => {
-    const v = videoRef.current;
-    if (!v) return alert("找不到相機");
-
-    // 準備合成畫布
-    composeCanvasRef.current = document.createElement("canvas");
-    composeCtxRef.current = composeCanvasRef.current.getContext("2d", {
-      alpha: true,
-    });
-    const W = v.videoWidth || v.clientWidth;
-    const H = v.videoHeight || v.clientHeight;
-    composeCanvasRef.current.width = W;
-    composeCanvasRef.current.height = H;
-
-    const draw = () => {
-      if (!composeCtxRef.current) return;
-      const ctx = composeCtxRef.current;
-
-      // video（含鏡像）
-      ctx.clearRect(0, 0, W, H);
       ctx.save();
       if (mirrored) {
         ctx.scale(-1, 1);
@@ -655,65 +720,208 @@ const FaceLandmarkCanvas = () => {
       }
       ctx.restore();
 
-      // 疊 R3F / overlay
       const r3f = ensureR3FCanvas();
       if (r3f) ctx.drawImage(r3f, 0, 0, W, H);
+
       const overlay = ensureOverlayCanvas();
       if (overlay) ctx.drawImage(overlay, 0, 0, W, H);
 
+      out.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `photo_${Date.now()}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, "image/png");
+    } catch (e) {
+      console.log(e);
+      alert("Failed to take photo.");
+    }
+  };
+
+  // ========== 錄影（輸出合成影片） ==========
+  // const startCompositeRecording = async () => {
+  //   const v = videoRef.current;
+  //   if (!v) return alert("找不到相機");
+
+  //   // 準備合成畫布
+  //   composeCanvasRef.current = document.createElement("canvas");
+  //   composeCtxRef.current = composeCanvasRef.current.getContext("2d", {
+  //     alpha: true,
+  //   });
+  //   const W = v.videoWidth || v.clientWidth;
+  //   const H = v.videoHeight || v.clientHeight;
+  //   composeCanvasRef.current.width = W;
+  //   composeCanvasRef.current.height = H;
+
+  //   const draw = () => {
+  //     if (!composeCtxRef.current) return;
+  //     const ctx = composeCtxRef.current;
+
+  //     // video（含鏡像）
+  //     ctx.clearRect(0, 0, W, H);
+  //     ctx.save();
+  //     if (mirrored) {
+  //       ctx.scale(-1, 1);
+  //       ctx.drawImage(v, -W, 0, W, H);
+  //     } else {
+  //       ctx.drawImage(v, 0, 0, W, H);
+  //     }
+  //     ctx.restore();
+
+  //     // 疊 R3F / overlay
+  //     const r3f = ensureR3FCanvas();
+  //     if (r3f) ctx.drawImage(r3f, 0, 0, W, H);
+  //     const overlay = ensureOverlayCanvas();
+  //     if (overlay) ctx.drawImage(overlay, 0, 0, W, H);
+
+  //     composeRafRef.current = requestAnimationFrame(draw);
+  //   };
+  //   composeRafRef.current = requestAnimationFrame(draw);
+
+  //   // 取得串流
+  //   capturedStreamRef.current = composeCanvasRef.current.captureStream(30);
+
+  //   // 啟動 MediaRecorder（iOS 優先 mp4）
+  //   recordedChunksRef.current = [];
+  //   const mime = pickMime();
+  //   const mr = mime
+  //     ? new MediaRecorder(capturedStreamRef.current, { mimeType: mime })
+  //     : new MediaRecorder(capturedStreamRef.current);
+  //   mediaRecorderRef.current = mr;
+
+  //   mr.ondataavailable = (e) => {
+  //     if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
+  //   };
+  //   mr.onstop = () => {
+  //     const type =
+  //       (mr as any).mimeType ||
+  //       (recordedChunksRef.current[0] as any)?.type ||
+  //       "video/webm";
+  //     const isMp4 = /mp4/i.test(type);
+  //     const blob = new Blob(recordedChunksRef.current, { type });
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = `record_${Date.now()}.${isMp4 ? "mp4" : "webm"}`;
+  //     a.click();
+  //     URL.revokeObjectURL(url);
+  //     // 清理
+  //     capturedStreamRef.current?.getTracks().forEach((t) => t.stop());
+  //     capturedStreamRef.current = null;
+  //     if (composeRafRef.current) {
+  //       cancelAnimationFrame(composeRafRef.current);
+  //       composeRafRef.current = null;
+  //     }
+  //     composeCtxRef.current = null;
+  //     composeCanvasRef.current = null;
+  //   };
+
+  //   mr.start();
+  //   setIsRecording(true);
+  //   setRecTime(0);
+
+  //   // 錄影 UI 計時
+  //   const start = performance.now();
+  //   const tick = (t: number) => {
+  //     setRecTime(Math.floor((t - start) / 1000));
+  //     recTimerRef.current = requestAnimationFrame(tick);
+  //   };
+  //   recTimerRef.current = requestAnimationFrame(tick);
+  // };
+  const startCompositeRecording = async () => {
+    try {
+      const v = videoRef.current;
+      if (!v) return alert("找不到相機");
+
+      composeCanvasRef.current = document.createElement("canvas");
+      composeCtxRef.current = composeCanvasRef.current.getContext("2d", {
+        alpha: true,
+      });
+      const W = v.videoWidth || v.clientWidth;
+      const H = v.videoHeight || v.clientHeight;
+      composeCanvasRef.current.width = W;
+      composeCanvasRef.current.height = H;
+
+      const draw = () => {
+        if (!composeCtxRef.current) return;
+        const ctx = composeCtxRef.current;
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.save();
+        if (mirrored) {
+          ctx.scale(-1, 1);
+          ctx.drawImage(v, -W, 0, W, H);
+        } else {
+          ctx.drawImage(v, 0, 0, W, H);
+        }
+        ctx.restore();
+
+        const r3f = ensureR3FCanvas();
+        if (r3f) ctx.drawImage(r3f, 0, 0, W, H);
+        const overlay = ensureOverlayCanvas();
+        if (overlay) ctx.drawImage(overlay, 0, 0, W, H);
+
+        composeRafRef.current = requestAnimationFrame(draw);
+      };
       composeRafRef.current = requestAnimationFrame(draw);
-    };
-    composeRafRef.current = requestAnimationFrame(draw);
 
-    // 取得串流
-    capturedStreamRef.current = composeCanvasRef.current.captureStream(30);
+      capturedStreamRef.current = composeCanvasRef.current.captureStream(30);
 
-    // 啟動 MediaRecorder（iOS 優先 mp4）
-    recordedChunksRef.current = [];
-    const mime = pickMime();
-    const mr = mime
-      ? new MediaRecorder(capturedStreamRef.current, { mimeType: mime })
-      : new MediaRecorder(capturedStreamRef.current);
-    mediaRecorderRef.current = mr;
+      recordedChunksRef.current = [];
+      const mime = pickMime();
+      const mr = mime
+        ? new MediaRecorder(capturedStreamRef.current, { mimeType: mime })
+        : new MediaRecorder(capturedStreamRef.current);
+      mediaRecorderRef.current = mr;
 
-    mr.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-    };
-    mr.onstop = () => {
-      const type =
-        (mr as any).mimeType ||
-        (recordedChunksRef.current[0] as any)?.type ||
-        "video/webm";
-      const isMp4 = /mp4/i.test(type);
-      const blob = new Blob(recordedChunksRef.current, { type });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `record_${Date.now()}.${isMp4 ? "mp4" : "webm"}`;
-      a.click();
-      URL.revokeObjectURL(url);
-      // 清理
-      capturedStreamRef.current?.getTracks().forEach((t) => t.stop());
-      capturedStreamRef.current = null;
-      if (composeRafRef.current) {
-        cancelAnimationFrame(composeRafRef.current);
-        composeRafRef.current = null;
-      }
-      composeCtxRef.current = null;
-      composeCanvasRef.current = null;
-    };
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+      mr.onstop = () => {
+        try {
+          const type =
+            (mr as any).mimeType ||
+            (recordedChunksRef.current[0] as any)?.type ||
+            "video/webm";
+          const isMp4 = /mp4/i.test(type);
+          const blob = new Blob(recordedChunksRef.current, { type });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `record_${Date.now()}.${isMp4 ? "mp4" : "webm"}`;
+          a.click();
+          URL.revokeObjectURL(url);
+          capturedStreamRef.current?.getTracks().forEach((t) => t.stop());
+          capturedStreamRef.current = null;
+          if (composeRafRef.current) {
+            cancelAnimationFrame(composeRafRef.current);
+            composeRafRef.current = null;
+          }
+          composeCtxRef.current = null;
+          composeCanvasRef.current = null;
+        } catch (e) {
+          console.log(e);
+          alert("Failed to save recording.");
+        }
+      };
 
-    mr.start();
-    setIsRecording(true);
-    setRecTime(0);
+      mr.start();
+      setIsRecording(true);
+      setRecTime(0);
 
-    // 錄影 UI 計時
-    const start = performance.now();
-    const tick = (t: number) => {
-      setRecTime(Math.floor((t - start) / 1000));
+      const start = performance.now();
+      const tick = (t: number) => {
+        setRecTime(Math.floor((t - start) / 1000));
+        recTimerRef.current = requestAnimationFrame(tick);
+      };
       recTimerRef.current = requestAnimationFrame(tick);
-    };
-    recTimerRef.current = requestAnimationFrame(tick);
+    } catch (e) {
+      console.log(e);
+      alert("Failed to start recording.");
+    }
   };
 
   const stopCompositeRecording = () => {
@@ -730,9 +938,18 @@ const FaceLandmarkCanvas = () => {
     }
   };
 
+  // const handleToggleRecord = async () => {
+  //   if (isRecording) stopCompositeRecording();
+  //   else await startCompositeRecording();
+  // };
   const handleToggleRecord = async () => {
-    if (isRecording) stopCompositeRecording();
-    else await startCompositeRecording();
+    try {
+      if (isRecording) stopCompositeRecording();
+      else await startCompositeRecording();
+    } catch (e) {
+      console.log(e);
+      alert("Failed to toggle recording.");
+    }
   };
 
   // 秒數顯示 00:00
@@ -760,7 +977,7 @@ const FaceLandmarkCanvas = () => {
           </div>
         )}
 
-        {videoSize && isRenderReady && (
+        {videoSize && isRenderReady && modelUrl && (
           <>
             {showAvatarCreator && (
               <ReadyPlayerCreator
@@ -769,7 +986,6 @@ const FaceLandmarkCanvas = () => {
                 handleComplete={handleAvatarCreationComplete}
               />
             )}
-
             {/* Avatar 視圖：建議在 AvatarCanvas 裡加 onCanvasReady={(el)=> r3fCanvasRef.current=el} */}
             {avatarView ? (
               <AvatarCanvas
