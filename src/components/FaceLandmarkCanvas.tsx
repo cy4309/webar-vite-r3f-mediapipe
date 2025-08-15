@@ -386,7 +386,7 @@
 /** @description 包含整體邏輯的容器元件：開啟攝影機、取得媒體串流、切換 view、初始化 AvatarManager、呼叫動畫 loop、拍照/錄影（合成輸出）等。 */
 
 import { useEffect, useRef, useState } from "react";
-import DrawLandmarkCanvas from "@/components/DrawLandmarkCanvas";
+// import DrawLandmarkCanvas from "@/components/DrawLandmarkCanvas";
 import AvatarCanvas from "@/components/AvatarCanvas";
 import FaceLandmarkManager from "@/classes/FaceLandmarkManager";
 import ReadyPlayerCreator from "@/components/ReadyPlayerCreator";
@@ -415,7 +415,7 @@ const FaceLandmarkCanvas = () => {
   const lastVideoTimeRef = useRef(-1);
   const requestRef = useRef(0);
 
-  const [avatarView, setAvatarView] = useState(true);
+  // const [avatarView, setAvatarView] = useState(true);
   const [showAvatarCreator, setShowAvatarCreator] = useState(false);
   const [modelUrl, setModelUrl] = useState("/tiger-hat2.glb");
   const [videoSize, setVideoSize] = useState<{
@@ -852,7 +852,17 @@ const FaceLandmarkCanvas = () => {
               />
             )}
             {/* Avatar 視圖：建議在 AvatarCanvas 裡加 onCanvasReady={(el)=> r3fCanvasRef.current=el} */}
-            {avatarView ? (
+            <AvatarCanvas
+              width={videoSize.width}
+              height={videoSize.height}
+              // url={modelUrl}
+              url="/tiger-hat2.glb"
+              // @ts-ignore 若你的 AvatarCanvas 還沒加這個 prop，不影響執行；會走 DOM fallback
+              onCanvasReady={(el: HTMLCanvasElement) =>
+                (r3fCanvasRef.current = el)
+              }
+            />
+            {/* {avatarView ? (
               <AvatarCanvas
                 width={videoSize.width}
                 height={videoSize.height}
@@ -873,7 +883,7 @@ const FaceLandmarkCanvas = () => {
                   overlayCanvasRef.current = el;
                 }}
               />
-            )}
+            )} */}
           </>
         )}
       </div>
