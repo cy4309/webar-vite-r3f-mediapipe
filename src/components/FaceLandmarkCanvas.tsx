@@ -417,7 +417,6 @@ const FaceLandmarkCanvas = () => {
   const [avatarView, setAvatarView] = useState(true);
   const [showAvatarCreator, setShowAvatarCreator] = useState(false);
   const [modelUrl, setModelUrl] = useState("/tiger-hat2.glb");
-
   const [videoSize, setVideoSize] = useState<{
     width: number;
     height: number;
@@ -991,7 +990,8 @@ const FaceLandmarkCanvas = () => {
               <AvatarCanvas
                 width={videoSize.width}
                 height={videoSize.height}
-                url={modelUrl}
+                // url={modelUrl}
+                url="/tiger-hat2.glb"
                 // @ts-ignore 若你的 AvatarCanvas 還沒加這個 prop，不影響執行；會走 DOM fallback
                 onCanvasReady={(el: HTMLCanvasElement) =>
                   (r3fCanvasRef.current = el)
