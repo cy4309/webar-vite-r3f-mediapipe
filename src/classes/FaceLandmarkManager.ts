@@ -39,10 +39,11 @@ class FaceLandmarkManager {
     //   numHands: 2,
     // });
 
+    const taskUrl = "/face_landmarker.task";
     this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
       baseOptions: {
         // modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-        modelAssetPath: "/face_landmarker.task",
+        modelAssetPath: taskUrl,
         delegate: "GPU",
       },
       outputFaceBlendshapes: true,

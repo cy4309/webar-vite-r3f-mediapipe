@@ -22,4 +22,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  assetsInclude: ["**/*.task", "**/*.wasm", "**/*.glb", "**/*.fbx"],
 });
