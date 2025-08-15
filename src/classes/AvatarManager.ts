@@ -25,13 +25,15 @@ class AvatarManager {
 
   loadModel = async (url: string, stickerUrl: string) => {
     this.isModelLoaded = false;
+
+    this.clearScene(); // ✅ 清空場景，避免殘留模型或貼圖
     if (this.scene.children.length === 1) {
       this.scene.children[0].removeFromParent();
     }
+
     const gltf = await loadGltf(url);
     // gltf.scene.traverse((obj) => (obj.frustumCulled = false));
     gltf.scene.traverse((obj) => {
-      // if (obj.name === "hat_luffy_0") {
       if (obj.name === "hat") {
         this.hatObject = obj;
       }
@@ -164,6 +166,14 @@ class AvatarManager {
       translation.y * 0.01,
       (translation.z + 50) * 0.02
     );
+  };
+
+  clearScene = () => {
+    this.scene.children.forEach((child) => {
+      this.scene.remove(child);
+    });
+    this.hatObject = undefined;
+    this.stickerSprite = undefined;
   };
 }
 
