@@ -38,18 +38,23 @@ class AvatarManager {
     });
     this.scene.add(gltf.scene);
 
-    // 加入貼紙 sprite
-    const textureLoader = new THREE.TextureLoader();
-    const stickerTexture = await textureLoader.loadAsync(stickerUrl);
-    this.stickerSprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: stickerTexture,
-        transparent: true,
-        color: 0xffffff, // 確保顏色不被染色
-      })
-    );
-    this.stickerSprite.scale.set(0.5, 0.5, 1); // 可依需求調整大小
-    this.scene.add(this.stickerSprite);
+    // ✅ 加入貼紙 sprite，增加錯誤處理
+    try {
+      const textureLoader = new THREE.TextureLoader();
+      const stickerTexture = await textureLoader.loadAsync(stickerUrl);
+
+      this.stickerSprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: stickerTexture,
+          transparent: true,
+          color: 0xffffff,
+        })
+      );
+      this.stickerSprite.scale.set(0.5, 0.5, 1);
+      this.scene.add(this.stickerSprite);
+    } catch (err) {
+      console.error("🚨 貼紙載入失敗！貼紙 URL 可能錯誤或取得的是 HTML", err);
+    }
 
     // make hands invisible
     const LeftHand = this.scene.getObjectByName("LeftHand");

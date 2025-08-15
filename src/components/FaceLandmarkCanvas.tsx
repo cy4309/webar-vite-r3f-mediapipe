@@ -593,6 +593,20 @@ const FaceLandmarkCanvas = () => {
     };
   }, []);
 
+  // 初始化 Mediapipe 模型（camera ready 後）
+  // useEffect(() => {
+  //   if (isCameraReady) {
+  //     (async () => {
+  //       try {
+  //         await FaceLandmarkManager.getInstance().initializeModel();
+  //       } catch (e) {
+  //         console.error("臉部偵測模型載入失敗", e);
+  //         alert("臉部偵測模型載入失敗，請稍後再試");
+  //       }
+  //     })();
+  //   }
+  // }, [isCameraReady]);
+
   useEffect(() => {
     if (isCameraReady && videoRef.current) {
       requestAnimationFrame(() => {

@@ -4,7 +4,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "react";
 import AvatarManager from "@/classes/AvatarManager";
 import FaceLandmarkManager from "@/classes/FaceLandmarkManager";
-import { Float, Text3D, OrbitControls } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import FaceMeshMask from "@/components/FaceMeshMask";
 import * as THREE from "three";
 interface AvatarCanvasProps {
@@ -51,7 +51,7 @@ const AvatarCanvas = ({
   if (!width || !height || !url) return null;
 
   const [scene, setScene] = useState<THREE.Scene | null>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [_, setIsLoading] = useState(true);
   const avatarManagerRef = useRef<AvatarManager>(AvatarManager.getInstance());
   const requestRef = useRef(0);
 
@@ -103,7 +103,7 @@ const AvatarCanvas = ({
         {/* {videoRef.current && <VideoPlane video={videoRef.current} mirrored={mirrored} />} */}
         <FaceMeshMask />
         {scene && <primitive object={scene} />}
-        {isLoading && (
+        {/* {isLoading && (
           <Float floatIntensity={1} speed={1}>
             <Text3D
               // font={"../assets/fonts/Open_Sans_Condensed_Bold.json"}
@@ -117,7 +117,7 @@ const AvatarCanvas = ({
               <meshNormalMaterial />
             </Text3D>
           </Float>
-        )}
+        )} */}
       </Canvas>
     </div>
   );

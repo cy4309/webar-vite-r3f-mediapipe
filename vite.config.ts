@@ -23,4 +23,11 @@ export default defineConfig({
     },
   },
   assetsInclude: ["**/*.task", "**/*.wasm", "**/*.glb", "**/*.fbx"],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined, // 防止切塊後導致 blob 失效
+      },
+    },
+  },
 });
