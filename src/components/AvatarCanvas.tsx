@@ -106,7 +106,8 @@ const AvatarCanvas = ({
         {isLoading && (
           <Float floatIntensity={1} speed={1}>
             <Text3D
-              font={"../assets/fonts/Open_Sans_Condensed_Bold.json"}
+              // font={"../assets/fonts/Open_Sans_Condensed_Bold.json"}
+              font=""
               scale={0.05}
               position={[-0.1, 0.6, 0]}
               bevelEnabled
